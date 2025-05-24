@@ -17,6 +17,8 @@ package main
 import (
 	"testing"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func TestHTTPRequestMetrics(t *testing.T) {
@@ -28,61 +30,123 @@ func TestHTTPRequestMetrics(t *testing.T) {
 }
 
 func TestHandlerResponseTimeMetrics(t *testing.T) {
-	// Test that the function doesn't panic
+	// Record handler response time
 	recordHandlerResponseTime("home", "GET", "200", 50*time.Millisecond)
-	
-	// This test mainly ensures the function doesn't panic
+
+	// Check if metric was recorded - use the underlying histogram metric directly
+	count := testutil.ToFloat64(handlerResponseTime)
+	if count == 0 {
+		t.Error("Expected handler response time metric to be recorded")
+	}
 }
 
 func TestCartOperationMetrics(t *testing.T) {
-	// Test that the function doesn't panic
+	// Record a cart operation
 	recordCartOperation("add", "success")
-	
-	// This test mainly ensures the function doesn't panic
+
+	// Check if metric was recorded
+	count := testutil.ToFloat64(cartOperationsTotal.WithLabelValues("add", "success"))
+	if count == 0 {
+		t.Error("Expected cart operation metric to be recorded")
+	}
 }
 
 func TestGRPCRequestMetrics(t *testing.T) {
-	// Test that the function doesn't panic
+	// Record a gRPC request
 	recordGRPCRequest("productcatalog", "GetProduct", "success", 25*time.Millisecond)
-	
-	// This test mainly ensures the function doesn't panic
+
+	// Check if metric was recorded
+	count := testutil.ToFloat64(grpcRequestsTotal.WithLabelValues("productcatalog", "GetProduct", "success"))
+	if count == 0 {
+		t.Error("Expected gRPC request metric to be recorded")
+	}
+
+	// Check duration histogram - use the underlying histogram metric directly
+	histogramCount := testutil.ToFloat64(grpcRequestDuration)
+	if histogramCount == 0 {
+		t.Error("Expected gRPC request duration to be recorded")
+	}
 }
 
 func TestErrorMetrics(t *testing.T) {
-	// Test that the function doesn't panic
+	// Record an error
 	recordError("grpc_error", "homeHandler")
-	
-	// This test mainly ensures the function doesn't panic
+
+	// Check if metric was recorded
+	count := testutil.ToFloat64(errorsTotal.WithLabelValues("grpc_error", "homeHandler"))
+	if count == 0 {
+		t.Error("Expected error metric to be recorded")
+	}
 }
 
 func TestProductViewMetrics(t *testing.T) {
-	// Test that incrementing product views doesn't panic
+	// Get initial count
+	initialCount := testutil.ToFloat64(productViewsTotal)
+
+	// Increment product views
 	productViewsTotal.Inc()
-	
-	// This test mainly ensures the metric increment doesn't panic
+
+	// Check if metric was incremented
+	newCount := testutil.ToFloat64(productViewsTotal)
+	if newCount != initialCount+1 {
+		t.Errorf("Expected product views to increase by 1, got %f -> %f", initialCount, newCount)
+	}
 }
 
 func TestOrderMetrics(t *testing.T) {
-	// Test that recording orders doesn't panic
+	// Get initial count
+	initialCount := testutil.ToFloat64(ordersTotal.WithLabelValues("success"))
+
+	// Record an order
 	ordersTotal.WithLabelValues("success").Inc()
 	orderValue.Observe(99.99)
-	
-	// This test mainly ensures the metric recording doesn't panic
+
+	// Check if counter was incremented
+	newCount := testutil.ToFloat64(ordersTotal.WithLabelValues("success"))
+	if newCount != initialCount+1 {
+		t.Errorf("Expected orders total to increase by 1, got %f -> %f", initialCount, newCount)
+	}
+
+	// Check if histogram recorded the value
+	histogramCount := testutil.ToFloat64(orderValue)
+	if histogramCount == 0 {
+		t.Error("Expected order value histogram to have recorded a value")
+	}
 }
 
 func TestCurrencyConversionMetrics(t *testing.T) {
-	// Test that recording currency conversions doesn't panic
+	// Get initial count
+	initialCount := testutil.ToFloat64(currencyConversionsTotal.WithLabelValues("USD", "EUR"))
+
+	// Record a currency conversion
 	currencyConversionsTotal.WithLabelValues("USD", "EUR").Inc()
-	
-	// This test mainly ensures the metric recording doesn't panic
+
+	// Check if metric was incremented
+	newCount := testutil.ToFloat64(currencyConversionsTotal.WithLabelValues("USD", "EUR"))
+	if newCount != initialCount+1 {
+		t.Errorf("Expected currency conversions to increase by 1, got %f -> %f", initialCount, newCount)
+	}
 }
 
 func TestActiveSessionsTracking(t *testing.T) {
-	// Test session tracking doesn't panic
+	// Test session tracking
+	originalValue := testutil.ToFloat64(activeSessionsTotal)
+
+	// Simulate session creation
 	activeSessionsTotal.Inc()
+
+	newValue := testutil.ToFloat64(activeSessionsTotal)
+	if newValue != originalValue+1 {
+		t.Errorf("Expected active sessions to increase by 1, got %f -> %f", originalValue, newValue)
+	}
+
+	// Simulate session destruction
 	activeSessionsTotal.Dec()
-	
-	// This test mainly ensures session tracking doesn't panic
+
+	finalValue := testutil.ToFloat64(activeSessionsTotal)
+	if finalValue != originalValue {
+		t.Errorf("Expected active sessions to return to original value %f, got %f", originalValue, finalValue)
+	}
 }
 
 func TestMetricsIntegration(t *testing.T) {
@@ -107,10 +171,17 @@ func TestMetricsIntegration(t *testing.T) {
 }
 
 func TestRecommendationMetrics(t *testing.T) {
-	// Test that recording recommendations doesn't panic
+	// Get initial count
+	initialCount := testutil.ToFloat64(recommendationsServedTotal)
+
+	// Record recommendations served
 	recommendationsServedTotal.Inc()
-	
-	// This test mainly ensures the metric increment doesn't panic
+
+	// Check if metric was incremented
+	newCount := testutil.ToFloat64(recommendationsServedTotal)
+	if newCount != initialCount+1 {
+		t.Errorf("Expected recommendations served to increase by 1, got %f -> %f", initialCount, newCount)
+	}
 }
 
 func TestConcurrentMetrics(t *testing.T) {
@@ -136,5 +207,8 @@ func TestConcurrentMetrics(t *testing.T) {
 		<-done
 	}
 
-	// This test mainly ensures concurrent access doesn't cause panics
+	// Verify that metrics were recorded (exact values depend on previous tests)
+	if testutil.ToFloat64(productViewsTotal) == 0 {
+		t.Error("Expected product views to be recorded")
+	}
 }

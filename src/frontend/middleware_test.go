@@ -18,8 +18,11 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -131,75 +134,43 @@ func TestResponseRecorder(t *testing.T) {
 }
 
 func TestEnsureSessionID(t *testing.T) {
-	t.Run("creates new session when none exists", func(t *testing.T) {
-		// Test handler that checks for session ID in context
-		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Verify session ID is in context
-			sessionID := r.Context().Value(ctxKeySessionID{})
-			if sessionID == nil {
-				t.Error("session ID not in context")
-				return
-			}
-			if sessionID == "" {
-				t.Error("session ID is empty")
-				return
-			}
-			w.WriteHeader(http.StatusOK)
-		})
-
-		handler := ensureSessionID(testHandler)
-
-		// Test with no existing session
-		req := httptest.NewRequest("GET", "/", nil)
-		rr := httptest.NewRecorder()
-
-		handler.ServeHTTP(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("ensureSessionID handler returned wrong status: got %v want %v", rr.Code, http.StatusOK)
+	// Test handler that checks for session ID
+	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		sessionCookie, err := r.Cookie(cookieSessionID)
+		if err != nil {
+			t.Error("session cookie not found")
+			return
 		}
-
-		// Check that Set-Cookie header was added
-		cookies := rr.Header()["Set-Cookie"]
-		if len(cookies) == 0 {
-			t.Error("ensureSessionID should set a session cookie")
+		if sessionCookie.Value == "" {
+			t.Error("session cookie has empty value")
+			return
 		}
-	})
-
-	t.Run("preserves existing session", func(t *testing.T) {
-		existingSessionID := "existing-session-123"
 		
-		// Test handler that verifies existing session is preserved
-		testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			sessionID := r.Context().Value(ctxKeySessionID{})
-			if sessionID != existingSessionID {
-				t.Errorf("expected session ID %s, got %v", existingSessionID, sessionID)
-			}
-			w.WriteHeader(http.StatusOK)
-		})
-
-		handler := ensureSessionID(testHandler)
-
-		// Test with existing session cookie
-		req := httptest.NewRequest("GET", "/", nil)
-		req.AddCookie(&http.Cookie{
-			Name:  cookieSessionID,
-			Value: existingSessionID,
-		})
-		rr := httptest.NewRecorder()
-
-		handler.ServeHTTP(rr, req)
-
-		if rr.Code != http.StatusOK {
-			t.Errorf("ensureSessionID handler returned wrong status: got %v want %v", rr.Code, http.StatusOK)
+		// Verify session ID is in context
+		if r.Context().Value(ctxKeySessionID{}) == nil {
+			t.Error("session ID not in context")
 		}
-
-		// Should not set a new cookie when session exists
-		cookies := rr.Header()["Set-Cookie"]
-		if len(cookies) > 0 {
-			t.Error("ensureSessionID should not set a new cookie when session exists")
-		}
+		
+		w.WriteHeader(http.StatusOK)
 	})
+
+	handler := ensureSessionID(testHandler)
+
+	// Test with no existing session
+	req := httptest.NewRequest("GET", "/", nil)
+	rr := httptest.NewRecorder()
+
+	handler.ServeHTTP(rr, req)
+
+	if rr.Code != http.StatusOK {
+		t.Errorf("ensureSessionID handler returned wrong status: got %v want %v", rr.Code, http.StatusOK)
+	}
+
+	// Check that Set-Cookie header was added
+	cookies := rr.Header()["Set-Cookie"]
+	if len(cookies) == 0 {
+		t.Error("ensureSessionID should set a session cookie")
+	}
 
 	// Test with existing session
 	req2 := httptest.NewRequest("GET", "/", nil)

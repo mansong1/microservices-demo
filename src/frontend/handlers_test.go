@@ -283,7 +283,17 @@ func TestPlatformDetailsSetPlatformDetails(t *testing.T) {
 }
 
 func TestChooseAd(t *testing.T) {
-	t.Skip("chooseAd test requires gRPC service connections and is complex to mock")
+	server := &frontendServer{}
+
+	ctx := context.Background()
+	log := logrus.New()
+
+	// Test successful ad retrieval
+	ad := server.chooseAd(ctx, []string{}, log)
+	// chooseAd should return nil when no ad service connection exists
+	if ad != nil {
+		t.Error("chooseAd() should return nil when no ad service connection exists")
+	}
 }
 
 func TestInjectCommonTemplateData(t *testing.T) {
