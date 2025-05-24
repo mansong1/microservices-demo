@@ -43,7 +43,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: <+artifacts.primary.image>
+        image: {{ .Values.images.productcatalogservice }}
         ports:
         - containerPort: 3550
         env:

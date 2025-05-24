@@ -43,7 +43,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: <+artifacts.primary.image>
+        image: {{ .Values.images.emailservice }}
         ports:
         - containerPort: 8080
         env:

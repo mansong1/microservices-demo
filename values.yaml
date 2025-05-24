@@ -1,0 +1,34 @@
+# Values file for microservices demo application
+# This file contains image references that can be overridden by CI/CD pipelines
+
+images:
+  adservice: <+artifacts.primary.image>
+  cartservice: <+artifacts.primary.image>
+  checkoutservice: <+artifacts.primary.image>
+  currencyservice: <+artifacts.primary.image>
+  emailservice: <+artifacts.primary.image>
+  frontend: <+artifacts.primary.image>
+  loadgenerator: <+artifacts.primary.image>
+  paymentservice: <+artifacts.primary.image>
+  productcatalogservice: <+artifacts.primary.image>
+  recommendationservice: <+artifacts.primary.image>
+  shippingservice: <+artifacts.primary.image>
+
+# Default images (fallback when not using CI/CD pipeline)
+defaultImages:
+  adservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/adservice:v0.10.2
+  cartservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/cartservice:v0.10.2
+  checkoutservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/checkoutservice:v0.10.2
+  currencyservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/currencyservice:v0.10.2
+  emailservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/emailservice:v0.10.2
+  frontend: us-central1-docker.pkg.dev/google-samples/microservices-demo/frontend:v0.10.2
+  loadgenerator: us-central1-docker.pkg.dev/google-samples/microservices-demo/loadgenerator:v0.10.2
+  paymentservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/paymentservice:v0.10.2
+  productcatalogservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/productcatalogservice:v0.10.2
+  recommendationservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/recommendationservice:v0.10.2
+  shippingservice: us-central1-docker.pkg.dev/google-samples/microservices-demo/shippingservice:v0.10.2
+
+# Third-party images (these don't change)
+thirdPartyImages:
+  redis: redis:alpine
+  busybox: busybox:latest

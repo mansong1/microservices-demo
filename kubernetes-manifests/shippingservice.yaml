@@ -42,7 +42,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: <+artifacts.primary.image>
+        image: {{ .Values.images.shippingservice }}
         ports:
         - containerPort: 50051
         env:
