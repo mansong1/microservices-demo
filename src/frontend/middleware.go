@@ -17,6 +17,8 @@ package main
 import (
 	"context"
 	"net/http"
+	"strconv"
+	"strings"
 	"time"
 	"os"
 
@@ -29,6 +31,10 @@ type ctxKeyRequestID struct{}
 
 type logHandler struct {
 	log  *logrus.Logger
+	next http.Handler
+}
+
+type metricsHandler struct {
 	next http.Handler
 }
 
@@ -82,11 +88,60 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	lh.next.ServeHTTP(rr, r)
 }
 
+func (mh *metricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	start := time.Now()
+	rr := &responseRecorder{w: w}
+	
+	// Extract path without query parameters and remove any path variables
+	path := r.URL.Path
+	handlerName := path
+	
+	// Normalize paths with IDs to avoid high cardinality
+	if strings.Contains(path, "/product/") {
+		path = "/product/{id}"
+		handlerName = "product"
+	} else if strings.Contains(path, "/product-meta/") {
+		path = "/product-meta/{ids}"
+		handlerName = "product-meta"
+	} else if path == "/" {
+		handlerName = "home"
+	} else if path == "/cart" {
+		handlerName = "cart"
+	} else if path == "/cart/checkout" {
+		handlerName = "checkout"
+	} else if path == "/set_currency" {
+		handlerName = "set-currency"
+	} else if strings.HasPrefix(path, "/static/") {
+		handlerName = "static"
+	} else if path == "/_healthz" {
+		handlerName = "health"
+	} else {
+		// Extract handler name from path for other routes
+		parts := strings.Split(strings.Trim(path, "/"), "/")
+		if len(parts) > 0 && parts[0] != "" {
+			handlerName = parts[0]
+		} else {
+			handlerName = "unknown"
+		}
+	}
+	
+	// Call the next handler
+	mh.next.ServeHTTP(rr, r)
+	
+	// Record metrics
+	duration := time.Since(start)
+	statusCode := strconv.Itoa(rr.status)
+	recordHTTPRequest(r.Method, path, statusCode, duration)
+	recordHandlerResponseTime(handlerName, r.Method, statusCode, duration)
+}
+
 func ensureSessionID(next http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var sessionID string
+		var newSession bool
 		c, err := r.Cookie(cookieSessionID)
 		if err == http.ErrNoCookie {
+			newSession = true
 			if os.Getenv("ENABLE_SINGLE_SHARED_SESSION") == "true" {
 				// Hard coded user id, shared across sessions
 				sessionID = "12345678-1234-1234-1234-123456789123"
@@ -104,6 +159,12 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		} else {
 			sessionID = c.Value
 		}
+		
+		// Record session metrics for new sessions
+		if newSession {
+			activeSessionsTotal.Inc()
+		}
+		
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)
