@@ -1,0 +1,291 @@
+pipeline:
+  name: Build and Deploy
+  identifier: Build_and_Deploy
+  tags: {}
+  projectIdentifier: Resilience
+  orgIdentifier: default
+  properties:
+    ci:
+      codebase:
+        connectorRef: account.Github
+        repoName: microservices-demo
+        build: <+input>
+  stages:
+    - stage:
+        name: Build and Push
+        identifier: Build_and_Push
+        description: ""
+        type: CI
+        spec:
+          cloneCodebase: true
+          caching:
+            enabled: true
+            override: false
+          buildIntelligence:
+            enabled: true
+          platform:
+            os: Linux
+            arch: Amd64
+          runtime:
+            type: Cloud
+            spec: {}
+          execution:
+            steps:
+              - parallel:
+                  - step:
+                      type: Test
+                      name: Go Unit Tests
+                      identifier: Go_Unit_Tests
+                      spec:
+                        connectorRef: account.Dockerhub
+                        image: golang:1.24.3
+                        shell: Sh
+                        command: |-
+                          go install github.com/jstemmer/go-junit-report@latest
+                          cd src/<+matrix.service>
+                          go test -v 2>&1 | go-junit-report > report.xml
+                        intelligenceMode: true
+                      strategy:
+                        matrix:
+                          service:
+                            - frontend
+                            - productcatalogservice
+                            - shippingservice
+                  - step:
+                      type: Test
+                      name: CSharp Unit Tests
+                      identifier: CSharp_Unit_Tests
+                      spec:
+                        connectorRef: account.Dockerhub
+                        image: mcr.microsoft.com/dotnet/sdk:9.0
+                        shell: Sh
+                        command: |
+                          dotnet test src/cartservice/ --logger:junit
+                        reports:
+                          type: JUnit
+                          spec:
+                            paths:
+                              - "**/*.xml"
+                        intelligenceMode: true
+              - step:
+                  type: BuildAndPushDockerRegistry
+                  name: Build and Push
+                  identifier: Build_and_Push
+                  spec:
+                    repo: <+matrix.service>
+                    tags:
+                      - v1.0.<+pipeline.sequenceId>
+                    caching: true
+                    dockerfile: src/<+matrix.service>/Dockerfile
+                    context: src/<+matrix.service>/
+                    registryRef: account.boutique
+                  strategy:
+                    matrix:
+                      service:
+                        - adservice
+                        - cartservice
+                        - checkoutservice
+                        - currencyservice
+                        - emailservice
+                        - frontend
+                        - loadgenerator
+                        - paymentservice
+                        - productcatalogservice
+                        - recommendationservice
+                        - shippingservice
+    - stage:
+        name: Deploy Backend Services
+        identifier: Deploy_Backend_Services
+        description: ""
+        type: Deployment
+        spec:
+          deploymentType: Kubernetes
+          services:
+            values:
+              - serviceRef: adservice
+              - serviceRef: cartservice
+              - serviceRef: checkoutservice
+              - serviceRef: currencyservice
+              - serviceRef: emailservice
+              - serviceRef: paymentservice
+              - serviceRef: productcatalogservice
+              - serviceRef: recommendationservice
+              - serviceRef: shippingservice
+            metadata:
+              parallel: true
+          environment:
+            environmentRef: staging
+            deployToAll: false
+            infrastructureDefinitions:
+              - identifier: boutique
+          execution:
+            steps:
+              - step:
+                  name: Rollout Deployment
+                  identifier: rolloutDeployment
+                  type: K8sRollingDeploy
+                  timeout: 10m
+                  spec:
+                    skipDryRun: false
+                    pruningEnabled: true
+            rollbackSteps:
+              - step:
+                  name: Rollback Rollout Deployment
+                  identifier: rollbackRolloutDeployment
+                  type: K8sRollingRollback
+                  timeout: 10m
+                  spec:
+                    pruningEnabled: false
+        tags: {}
+        failureStrategies:
+          - onFailure:
+              errors:
+                - AllErrors
+              action:
+                type: StageRollback
+    - parallel:
+        - stage:
+            name: Deploy Frontend
+            identifier: Deploy_Frontend
+            description: ""
+            type: Deployment
+            spec:
+              deploymentType: Kubernetes
+              environment:
+                environmentRef: staging
+                deployToAll: false
+                infrastructureDefinitions:
+                  - identifier: boutique
+              execution:
+                steps:
+                  - stepGroup:
+                      name: Canary Deployment
+                      identifier: canaryDeployment
+                      steps:
+                        - step:
+                            name: Canary Deployment
+                            identifier: canaryDeployment
+                            type: K8sCanaryDeploy
+                            timeout: 10m
+                            spec:
+                              instanceSelection:
+                                type: Count
+                                spec:
+                                  count: 1
+                              skipDryRun: false
+                        - step:
+                            type: Verify
+                            name: Verify
+                            identifier: Verify
+                            timeout: 2h
+                            spec:
+                              isMultiServicesOrEnvs: false
+                              type: Canary
+                              monitoredService:
+                                type: Default
+                                spec: {}
+                              spec:
+                                sensitivity: HIGH
+                                duration: 15m
+                            failureStrategies:
+                              - onFailure:
+                                  errors:
+                                    - Verification
+                                  action:
+                                    type: ManualIntervention
+                                    spec:
+                                      timeout: 2h
+                                      onTimeout:
+                                        action:
+                                          type: StageRollback
+                              - onFailure:
+                                  errors:
+                                    - Unknown
+                                  action:
+                                    type: ManualIntervention
+                                    spec:
+                                      timeout: 2h
+                                      onTimeout:
+                                        action:
+                                          type: Ignore
+                        - step:
+                            name: Canary Delete
+                            identifier: canaryDelete
+                            type: K8sCanaryDelete
+                            timeout: 10m
+                            spec: {}
+                  - stepGroup:
+                      name: Primary Deployment
+                      identifier: primaryDeployment
+                      steps:
+                        - step:
+                            name: Rolling Deployment
+                            identifier: rollingDeployment
+                            type: K8sRollingDeploy
+                            timeout: 10m
+                            spec:
+                              skipDryRun: false
+                              pruningEnabled: true
+                rollbackSteps:
+                  - step:
+                      name: Canary Delete
+                      identifier: rollbackCanaryDelete
+                      type: K8sCanaryDelete
+                      timeout: 10m
+                      spec: {}
+                  - step:
+                      name: Rolling Rollback
+                      identifier: rollingRollback
+                      type: K8sRollingRollback
+                      timeout: 10m
+                      spec: {}
+              service:
+                serviceRef: frontend
+            tags: {}
+            failureStrategies:
+              - onFailure:
+                  errors:
+                    - AllErrors
+                  action:
+                    type: StageRollback
+        - stage:
+            name: Deploy LoadGen
+            identifier: Deploy_LoadGen
+            description: ""
+            type: Deployment
+            spec:
+              deploymentType: Kubernetes
+              service:
+                serviceRef: loadgenerator
+              environment:
+                environmentRef: staging
+                deployToAll: false
+                infrastructureDefinitions:
+                  - identifier: boutique
+              execution:
+                steps:
+                  - step:
+                      name: Rollout Deployment
+                      identifier: rolloutDeployment
+                      type: K8sRollingDeploy
+                      timeout: 10m
+                      spec:
+                        skipDryRun: false
+                        pruningEnabled: true
+                rollbackSteps:
+                  - step:
+                      name: Rollback Rollout Deployment
+                      identifier: rollbackRolloutDeployment
+                      type: K8sRollingRollback
+                      timeout: 10m
+                      spec:
+                        pruningEnabled: false
+            tags: {}
+            failureStrategies:
+              - onFailure:
+                  errors:
+                    - AllErrors
+                  action:
+                    type: StageRollback
+  allowStageExecutions: true
+  fixedInputsOnRerun: false
