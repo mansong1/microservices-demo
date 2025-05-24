@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/sirupsen/logrus"
 	pb "github.com/GoogleCloudPlatform/microservices-demo/src/frontend/genproto"
+	"github.com/sirupsen/logrus"
 )
 
 func createTestRequest(method, path string, body string) *http.Request {
@@ -33,23 +33,23 @@ func createTestRequest(method, path string, body string) *http.Request {
 	} else {
 		req = httptest.NewRequest(method, path, nil)
 	}
-	
+
 	// Add session ID cookie
 	req.AddCookie(&http.Cookie{
 		Name:  "shop_session-id",
 		Value: "test-session-123",
 	})
-	
+
 	// Add currency cookie
 	req.AddCookie(&http.Cookie{
 		Name:  "shop_currency",
 		Value: "USD",
 	})
-	
+
 	// Add context values
 	ctx := context.WithValue(req.Context(), ctxKeyLog{}, logrus.New())
 	ctx = context.WithValue(ctx, ctxKeyRequestID{}, "test-request-123")
-	
+
 	return req.WithContext(ctx)
 }
 
@@ -220,7 +220,7 @@ func TestRenderMoney(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := renderMoney(*tt.money)
+			result := renderMoney(tt.money)
 			if result != tt.expected {
 				t.Errorf("renderMoney() = %v, want %v", result, tt.expected)
 			}
@@ -298,7 +298,7 @@ func TestChooseAd(t *testing.T) {
 
 func TestInjectCommonTemplateData(t *testing.T) {
 	req := createTestRequest("GET", "/", "")
-	
+
 	payload := map[string]interface{}{
 		"test_key": "test_value",
 	}

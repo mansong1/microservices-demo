@@ -18,11 +18,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
-	"time"
 
-	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -134,23 +131,19 @@ func TestResponseRecorder(t *testing.T) {
 }
 
 func TestEnsureSessionID(t *testing.T) {
-	// Test handler that checks for session ID
+	// Test handler that checks for session ID in context
 	testHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		sessionCookie, err := r.Cookie(cookieSessionID)
-		if err != nil {
-			t.Error("session cookie not found")
-			return
-		}
-		if sessionCookie.Value == "" {
-			t.Error("session cookie has empty value")
-			return
-		}
-		
 		// Verify session ID is in context
-		if r.Context().Value(ctxKeySessionID{}) == nil {
+		sessionID := r.Context().Value(ctxKeySessionID{})
+		if sessionID == nil {
 			t.Error("session ID not in context")
+			return
 		}
-		
+		if sessionID.(string) == "" {
+			t.Error("session ID in context is empty")
+			return
+		}
+
 		w.WriteHeader(http.StatusOK)
 	})
 
@@ -209,7 +202,7 @@ func TestMiddlewareChain(t *testing.T) {
 		if r.Context().Value(ctxKeySessionID{}) == nil {
 			t.Error("session ID context not set in middleware chain")
 		}
-		
+
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("success"))
 	})
@@ -238,7 +231,7 @@ func TestMiddlewareChain(t *testing.T) {
 func TestContextKeys(t *testing.T) {
 	// Test that context keys work correctly
 	ctx := context.Background()
-	
+
 	// Test ctxKeyLog
 	log := logrus.New()
 	ctx = context.WithValue(ctx, ctxKeyLog{}, log)

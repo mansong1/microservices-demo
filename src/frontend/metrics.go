@@ -149,7 +149,7 @@ var (
 func recordHTTPRequest(method, path, status string, duration time.Duration) {
 	httpRequestsTotal.WithLabelValues(method, path, status).Inc()
 	httpRequestDuration.WithLabelValues(method, path).Observe(duration.Seconds())
-	
+
 	// Also record using OpenTelemetry-style metric name
 	// Use path as route and status as status_code to match OTel conventions
 	httpServerRequestDuration.WithLabelValues(method, path, status).Observe(duration.Seconds())

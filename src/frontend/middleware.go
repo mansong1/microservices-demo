@@ -17,10 +17,10 @@ package main
 import (
 	"context"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
-	"os"
 
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -91,11 +91,11 @@ func (lh *logHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (mh *metricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	start := time.Now()
 	rr := &responseRecorder{w: w}
-	
+
 	// Extract path without query parameters and remove any path variables
 	path := r.URL.Path
 	handlerName := path
-	
+
 	// Normalize paths with IDs to avoid high cardinality
 	if strings.Contains(path, "/product/") {
 		path = "/product/{id}"
@@ -124,10 +124,10 @@ func (mh *metricsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			handlerName = "unknown"
 		}
 	}
-	
+
 	// Call the next handler
 	mh.next.ServeHTTP(rr, r)
-	
+
 	// Record metrics
 	duration := time.Since(start)
 	statusCode := strconv.Itoa(rr.status)
@@ -159,12 +159,12 @@ func ensureSessionID(next http.Handler) http.HandlerFunc {
 		} else {
 			sessionID = c.Value
 		}
-		
+
 		// Record session metrics for new sessions
 		if newSession {
 			activeSessionsTotal.Inc()
 		}
-		
+
 		ctx := context.WithValue(r.Context(), ctxKeySessionID{}, sessionID)
 		r = r.WithContext(ctx)
 		next.ServeHTTP(w, r)

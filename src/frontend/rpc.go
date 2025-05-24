@@ -53,13 +53,13 @@ func (fe *frontendServer) getProduct(ctx context.Context, id string) (*pb.Produc
 	resp, err := pb.NewProductCatalogServiceClient(fe.productCatalogSvcConn).
 		GetProduct(ctx, &pb.GetProductRequest{Id: id})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("ProductCatalogService", "GetProduct", status, duration)
-	
+
 	return resp, err
 }
 
@@ -67,13 +67,13 @@ func (fe *frontendServer) getCart(ctx context.Context, userID string) ([]*pb.Car
 	start := time.Now()
 	resp, err := pb.NewCartServiceClient(fe.cartSvcConn).GetCart(ctx, &pb.GetCartRequest{UserId: userID})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("CartService", "GetCart", status, duration)
-	
+
 	return resp.GetItems(), err
 }
 
@@ -81,13 +81,13 @@ func (fe *frontendServer) emptyCart(ctx context.Context, userID string) error {
 	start := time.Now()
 	_, err := pb.NewCartServiceClient(fe.cartSvcConn).EmptyCart(ctx, &pb.EmptyCartRequest{UserId: userID})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("CartService", "EmptyCart", status, duration)
-	
+
 	return err
 }
 
@@ -100,13 +100,13 @@ func (fe *frontendServer) insertCart(ctx context.Context, userID, productID stri
 			Quantity:  quantity},
 	})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("CartService", "AddItem", status, duration)
-	
+
 	return err
 }
 
@@ -114,20 +114,20 @@ func (fe *frontendServer) convertCurrency(ctx context.Context, money *pb.Money, 
 	if avoidNoopCurrencyConversionRPC && money.GetCurrencyCode() == currency {
 		return money, nil
 	}
-	
+
 	start := time.Now()
 	resp, err := pb.NewCurrencyServiceClient(fe.currencySvcConn).
 		Convert(ctx, &pb.CurrencyConversionRequest{
 			From:   money,
 			ToCode: currency})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("CurrencyService", "Convert", status, duration)
-	
+
 	return resp, err
 }
 
@@ -138,13 +138,13 @@ func (fe *frontendServer) getShippingQuote(ctx context.Context, items []*pb.Cart
 			Address: nil,
 			Items:   items})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("ShippingService", "GetQuote", status, duration)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 	resp, err := pb.NewRecommendationServiceClient(fe.recommendationSvcConn).ListRecommendations(ctx,
 		&pb.ListRecommendationsRequest{UserId: userID, ProductIds: productIDs})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
@@ -165,7 +165,7 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 		return nil, err
 	}
 	recordGRPCRequest("RecommendationService", "ListRecommendations", status, duration)
-	
+
 	out := make([]*pb.Product, len(resp.GetProductIds()))
 	for i, v := range resp.GetProductIds() {
 		p, err := fe.getProduct(ctx, v)
@@ -181,6 +181,11 @@ func (fe *frontendServer) getRecommendations(ctx context.Context, userID string,
 }
 
 func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad, error) {
+	// Check if ad service connection is available
+	if fe.adSvcConn == nil {
+		return nil, errors.New("ad service connection not available")
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, time.Millisecond*100)
 	defer cancel()
 
@@ -189,12 +194,12 @@ func (fe *frontendServer) getAd(ctx context.Context, ctxKeys []string) ([]*pb.Ad
 		ContextKeys: ctxKeys,
 	})
 	duration := time.Since(start)
-	
+
 	status := "success"
 	if err != nil {
 		status = "error"
 	}
 	recordGRPCRequest("AdService", "GetAds", status, duration)
-	
+
 	return resp.GetAds(), errors.Wrap(err, "failed to get ads")
 }
