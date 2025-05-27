@@ -32,3 +32,9 @@ defaultImages:
 thirdPartyImages:
   redis: redis:alpine
   busybox: busybox:latest
+
+# Docker configuration for image pull secrets
+dockercfg: <+artifacts.primary.imagePullSecret>
+
+# Shared image pull secret name
+imagePullSecret: shared-dockercfg

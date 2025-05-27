@@ -12,6 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+{{- if .Values.dockercfg}}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: shared-dockercfg
+  annotations:
+    harness.io/skip-versioning: true
+data:
+  .dockercfg: {{.Values.dockercfg}}
+type: kubernetes.io/dockercfg
+{{- end}}
+
+---
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -28,6 +42,10 @@ spec:
         app: adservice
     spec:
       serviceAccountName: adservice
+      {{- if .Values.dockercfg}}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
+      {{- end}}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000

@@ -28,6 +28,10 @@ spec:
         app: cartservice
     spec:
       serviceAccountName: cartservice
+      {{- if .Values.dockercfg}}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
+      {{- end}}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000

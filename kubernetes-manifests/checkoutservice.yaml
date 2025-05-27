@@ -28,6 +28,8 @@ spec:
         app: checkoutservice
     spec:
       serviceAccountName: checkoutservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000

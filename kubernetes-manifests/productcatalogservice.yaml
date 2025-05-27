@@ -28,6 +28,8 @@ spec:
         app: productcatalogservice
     spec:
       serviceAccountName: productcatalogservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
