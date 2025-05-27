@@ -1889,49 +1889,30 @@ data:
           - targets: ['mysql-exporter.monitoring.svc.cluster.local:9104']
             labels:
               alias: db1
-      - job_name: prometheus-blackbox-exporter-http
-        scrape_interval: 1s
-        metrics_path: /metrics
-        params:
-          module: [http_2xx]
-        static_configs:
-          - targets:
-            - frontend.boutique.svc.cluster.local:80
-            - productcatalogservice.boutique.svc.cluster.local:3550
-            - adservice.boutique.svc.cluster.local:9555
-            - cartservice.boutique.svc.cluster.local:7070
-            - checkoutservice.boutique.svc.cluster.local:5050
-            - currencyservice.boutique.svc.cluster.local:7000
-            - emailservice.boutique.svc.cluster.local:5000
-            - paymentservice.boutique.svc.cluster.local:50051
-            - recommendationservice.boutique.svc.cluster.local:8080
-            - redis-cart.boutique.svc.cluster.local:6379
-            - shippingservice.boutique.svc.cluster.local:50051
       - job_name: prometheus-blackbox-exporter
-        scrape_interval: 1s
+        scrape_interval: 5s
         metrics_path: /probe
         params:
           module: [http_2xx]
         static_configs:
           - targets:
-            - frontend.boutique.svc.cluster.local:80
-            - productcatalogservice.boutique.svc.cluster.local:3550
-            - adservice.boutique.svc.cluster.local:9555
-            - cartservice.boutique.svc.cluster.local:7070
-            - checkoutservice.boutique.svc.cluster.local:5050
-            - currencyservice.boutique.svc.cluster.local:7000
-            - emailservice.boutique.svc.cluster.local:5000
-            - paymentservice.boutique.svc.cluster.local:50051
-            - recommendationservice.boutique.svc.cluster.local:8080
-            - redis-cart.boutique.svc.cluster.local:6379
-            - shippingservice.boutique.svc.cluster.local:50051
+            - http://frontend.boutique.svc.cluster.local:80
+            - http://productcatalogservice.boutique.svc.cluster.local:3550
+            - http://adservice.boutique.svc.cluster.local:9555
+            - http://cartservice.boutique.svc.cluster.local:7070
+            - http://checkoutservice.boutique.svc.cluster.local:5050
+            - http://currencyservice.boutique.svc.cluster.local:7000
+            - http://emailservice.boutique.svc.cluster.local:5000
+            - http://paymentservice.boutique.svc.cluster.local:50051
+            - http://recommendationservice.boutique.svc.cluster.local:8080
+            - http://shippingservice.boutique.svc.cluster.local:50051
         relabel_configs:
           - source_labels: [__address__]
             target_label: __param_target
           - source_labels: [__param_target]
             target_label: instance
           - target_label: __address__
-            replacement: 'prometheus-blackbox-exporter:9115'
+            replacement: 'prometheus-blackbox-exporter.monitoring.svc.cluster.local:9115'
       - job_name: 'frontend'
         static_configs:
           - targets: ['frontend-metrics.boutique.svc.cluster.local:8080']
