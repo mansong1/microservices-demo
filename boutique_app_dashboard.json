@@ -42,7 +42,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 2,
+  "id": 5,
   "links": [],
   "panels": [
     {
@@ -149,7 +149,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -246,7 +246,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -349,7 +349,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -447,7 +447,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -550,7 +550,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -644,7 +644,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -747,7 +747,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -841,7 +841,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -944,7 +944,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -1038,7 +1038,7 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
@@ -1118,7 +1118,7 @@
         "x": 12,
         "y": 41
       },
-      "id": 14,
+      "id": 6,
       "options": {
         "legend": {
           "calcs": [],
@@ -1132,18 +1132,18 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFE396EC0B189D67"
           },
-          "expr": "avg_over_time(probe_duration_seconds{job=\"prometheus-blackbox-exporter\", instance=\"redis-cart.boutique.svc.cluster.local:6379\"}[60s:1s])*1000",
+          "expr": "avg_over_time(probe_duration_seconds{job=\"prometheus-blackbox-exporter\", instance=\"adservice.boutique.svc.cluster.local:9555\"}[60s:1s])*1000",
           "refId": "A"
         }
       ],
-      "title": "Access Duration(redis-cart)",
+      "title": "Access Duration(Adservice)",
       "type": "timeseries"
     },
     {
@@ -1212,7 +1212,7 @@
         "x": 12,
         "y": 49
       },
-      "id": 6,
+      "id": 14,
       "options": {
         "legend": {
           "calcs": [],
@@ -1226,18 +1226,18 @@
           "sort": "none"
         }
       },
-      "pluginVersion": "12.0.0+security-01",
+      "pluginVersion": "12.0.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "PBFE396EC0B189D67"
           },
-          "expr": "avg_over_time(probe_duration_seconds{job=\"prometheus-blackbox-exporter\", instance=\"adservice.boutique.svc.cluster.local:9555\"}[60s:1s])*1000",
+          "expr": "avg_over_time(probe_duration_seconds{job=\"prometheus-blackbox-exporter\", instance=\"redis-cart.boutique.svc.cluster.local:6379\"}[60s:1s])*1000",
           "refId": "A"
         }
       ],
-      "title": "Access Duration(Adservice)",
+      "title": "Access Duration(redis-cart)",
       "type": "timeseries"
     }
   ],
