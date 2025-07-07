@@ -94,32 +94,6 @@ pipeline:
                         - recommendationservice
                         - shippingservice
     - stage:
-        name: Approval_1
-        identifier: Approval_1
-        description: ""
-        type: Approval
-        spec:
-          execution:
-            steps:
-              - step:
-                  name: Approval
-                  identifier: Approval
-                  type: HarnessApproval
-                  timeout: 1d
-                  spec:
-                    approvalMessage: |-
-                      Please review the following information
-                      and approve the pipeline progression
-                    includePipelineExecutionHistory: true
-                    approvers:
-                      minimumCount: 1
-                      disallowPipelineExecutor: false
-                      userGroups:
-                        - account._account_all_users
-                    isAutoRejectEnabled: false
-                    approverInputs: []
-        tags: {}
-    - stage:
         name: Deploy Backend Services
         identifier: Deploy_Backend_Services
         description: ""
@@ -175,7 +149,7 @@ pipeline:
                     pruningEnabled: false
           environments:
             metadata:
-              parallel: false
+              parallel: true
             values:
               - environmentRef: staging
                 deployToAll: false
@@ -188,32 +162,6 @@ pipeline:
                 - AllErrors
               action:
                 type: StageRollback
-    - stage:
-        name: Approval
-        identifier: Approval
-        description: ""
-        type: Approval
-        spec:
-          execution:
-            steps:
-              - step:
-                  name: Approval
-                  identifier: Approval
-                  type: HarnessApproval
-                  timeout: 1d
-                  spec:
-                    approvalMessage: |-
-                      Please review the following information
-                      and approve the pipeline progression
-                    includePipelineExecutionHistory: true
-                    approvers:
-                      minimumCount: 1
-                      disallowPipelineExecutor: false
-                      userGroups:
-                        - account._account_all_users
-                    isAutoRejectEnabled: false
-                    approverInputs: []
-        tags: {}
     - parallel:
         - stage:
             name: Deploy Frontend
