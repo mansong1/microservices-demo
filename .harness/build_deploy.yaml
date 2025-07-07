@@ -132,18 +132,29 @@ pipeline:
               - serviceRef: cartservice
               - serviceRef: checkoutservice
               - serviceRef: currencyservice
+                serviceInputs:
+                  serviceDefinition:
+                    type: Kubernetes
+                    spec:
+                      artifacts:
+                        primary:
+                          primaryArtifactRef: <+input>
+                          sources: <+input>
               - serviceRef: emailservice
               - serviceRef: paymentservice
               - serviceRef: productcatalogservice
+                serviceInputs:
+                  serviceDefinition:
+                    type: Kubernetes
+                    spec:
+                      artifacts:
+                        primary:
+                          primaryArtifactRef: <+input>
+                          sources: <+input>
               - serviceRef: recommendationservice
               - serviceRef: shippingservice
             metadata:
-              parallel: true
-          environment:
-            environmentRef: staging
-            deployToAll: false
-            infrastructureDefinitions:
-              - identifier: boutique
+              parallel: false
           execution:
             steps:
               - step:
@@ -162,6 +173,14 @@ pipeline:
                   timeout: 10m
                   spec:
                     pruningEnabled: false
+          environments:
+            metadata:
+              parallel: false
+            values:
+              - environmentRef: staging
+                deployToAll: false
+                infrastructureDefinitions:
+                  - identifier: boutique
         tags: {}
         failureStrategies:
           - onFailure:
