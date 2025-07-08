@@ -128,7 +128,7 @@ pipeline:
               - serviceRef: recommendationservice
               - serviceRef: shippingservice
             metadata:
-              parallel: false
+              parallel: true
           execution:
             steps:
               - step:
