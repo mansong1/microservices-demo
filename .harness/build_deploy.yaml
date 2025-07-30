@@ -107,18 +107,10 @@ pipeline:
               - serviceRef: checkoutservice
               - serviceRef: emailservice
               - serviceRef: paymentservice
-              - serviceRef: productcatalogservice
-                serviceInputs:
-                  serviceDefinition:
-                    type: Kubernetes
-                    spec:
-                      artifacts:
-                        primary:
-                          primaryArtifactRef: <+input>
-                          sources: <+input>
               - serviceRef: recommendationservice
               - serviceRef: shippingservice
               - serviceRef: currencyservice
+              - serviceRef: productcatalogservice
             metadata:
               parallel: true
           execution:
