@@ -10,6 +10,7 @@ pipeline:
         connectorRef: account.Github
         repoName: microservices-demo
         build: <+input>
+        sparseCheckout: []
   stages:
     - stage:
         name: Build and Push
