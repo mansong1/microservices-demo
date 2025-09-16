@@ -28,6 +28,8 @@ spec:
         app: recommendationservice
     spec:
       serviceAccountName: recommendationservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +45,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: recommendationservice
+        image: {{ .Values.images.recommendationservice }}
         ports:
         - containerPort: 8080
         readinessProbe:

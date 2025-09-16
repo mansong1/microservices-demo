@@ -28,6 +28,8 @@ spec:
         app: checkoutservice
     spec:
       serviceAccountName: checkoutservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -42,7 +44,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: checkoutservice
+          image: {{ .Values.images.checkoutservice }}
           ports:
           - containerPort: 5050
           readinessProbe:

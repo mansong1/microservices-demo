@@ -28,6 +28,8 @@ spec:
         app: currencyservice
     spec:
       serviceAccountName: currencyservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +45,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: currencyservice
+        image: {{ .Values.images.currencyservice }}
         ports:
         - name: grpc
           containerPort: 7000

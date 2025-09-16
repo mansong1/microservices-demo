@@ -28,6 +28,8 @@ spec:
         app: emailservice
     spec:
       serviceAccountName: emailservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +45,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: emailservice
+        image: {{ .Values.images.emailservice }}
         ports:
         - containerPort: 8080
         env:

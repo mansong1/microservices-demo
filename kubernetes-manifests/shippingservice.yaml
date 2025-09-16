@@ -28,6 +28,8 @@ spec:
         app: shippingservice
     spec:
       serviceAccountName: shippingservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -42,7 +44,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: shippingservice
+        image: {{ .Values.images.shippingservice }}
         ports:
         - containerPort: 50051
         env:

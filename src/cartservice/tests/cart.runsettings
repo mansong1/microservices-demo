@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <Loggers>
+    <Logger friendlyName="junit" enabled="True" uri="logger://Microsoft/TestPlatform/JunitXmlLogger/v1">
+      <Configuration>
+        <LogFilePath>TestResults/cartservice-results.xml</LogFilePath>
+      </Configuration>
+    </Logger>
+  </Loggers>
+  <RunConfiguration>
+    <ResultsDirectory>TestResults</ResultsDirectory>
+  </RunConfiguration>
+</RunSettings>

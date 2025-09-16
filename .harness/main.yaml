@@ -1,0 +1,14 @@
+inputSet:
+  name: main
+  identifier: main
+  orgIdentifier: default
+  projectIdentifier: Resilience
+  pipeline:
+    identifier: Build_and_Deploy
+    properties:
+      ci:
+        codebase:
+          build:
+            type: branch
+            spec:
+              branch: <+trigger.branch>

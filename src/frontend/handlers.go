@@ -48,7 +48,7 @@ var (
 	assistantEnabled = "true" == strings.ToLower(os.Getenv("ENABLE_ASSISTANT"))
 	templates        = template.Must(template.New("").
 				Funcs(template.FuncMap{
-			"renderMoney":        renderMoney,
+			"renderMoney":        func(money pb.Money) string { return renderMoney(&money) },
 			"renderCurrencyLogo": renderCurrencyLogo,
 		}).ParseGlob("templates/*.html"))
 	plat platformDetails
@@ -205,6 +205,9 @@ func (fe *frontendServer) productHandler(w http.ResponseWriter, r *http.Request)
 		"packagingInfo":   packagingInfo,
 	})); err != nil {
 		log.Println(err)
+	} else {
+		// Record successful product view
+		productViewsTotal.Inc()
 	}
 }
 
@@ -229,10 +232,12 @@ func (fe *frontendServer) addToCartHandler(w http.ResponseWriter, r *http.Reques
 	}
 
 	if err := fe.insertCart(r.Context(), sessionID(r), p.GetId(), int32(payload.Quantity)); err != nil {
+		recordCartOperation("add", "error")
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to add to cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/cart")
+	recordCartOperation("add", "success")
+	w.Header().Set("location", baseUrl+"/cart")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -241,10 +246,12 @@ func (fe *frontendServer) emptyCartHandler(w http.ResponseWriter, r *http.Reques
 	log.Debug("emptying cart")
 
 	if err := fe.emptyCart(r.Context(), sessionID(r)); err != nil {
+		recordCartOperation("empty", "error")
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to empty cart"), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("location", baseUrl + "/")
+	recordCartOperation("empty", "success")
+	w.Header().Set("location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -369,6 +376,7 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 				Country:       payload.Country},
 		})
 	if err != nil {
+		ordersTotal.WithLabelValues("error").Inc()
 		renderHTTPError(log, r, w, errors.Wrap(err, "failed to complete the order"), http.StatusInternalServerError)
 		return
 	}
@@ -382,6 +390,11 @@ func (fe *frontendServer) placeOrderHandler(w http.ResponseWriter, r *http.Reque
 		multPrice := money.MultiplySlow(*v.GetCost(), uint32(v.GetItem().GetQuantity()))
 		totalPaid = money.Must(money.Sum(totalPaid, multPrice))
 	}
+
+	// Record order metrics
+	ordersTotal.WithLabelValues("success").Inc()
+	orderValueUSD := float64(totalPaid.GetUnits()) + float64(totalPaid.GetNanos())/1e9
+	orderValue.Observe(orderValueUSD)
 
 	currencies, err := fe.getCurrencies(r.Context())
 	if err != nil {
@@ -423,7 +436,7 @@ func (fe *frontendServer) logoutHandler(w http.ResponseWriter, r *http.Request) 
 		c.MaxAge = -1
 		http.SetCookie(w, c)
 	}
-	w.Header().Set("Location", baseUrl + "/")
+	w.Header().Set("Location", baseUrl+"/")
 	w.WriteHeader(http.StatusFound)
 }
 
@@ -508,6 +521,12 @@ func (fe *frontendServer) setCurrencyHandler(w http.ResponseWriter, r *http.Requ
 		Debug("setting currency")
 
 	if payload.Currency != "" {
+		// Record currency conversion metrics
+		oldCurrency := currentCurrency(r)
+		if oldCurrency != payload.Currency {
+			currencyConversionsTotal.WithLabelValues(oldCurrency, payload.Currency).Inc()
+		}
+
 		http.SetCookie(w, &http.Cookie{
 			Name:   cookieCurrency,
 			Value:  payload.Currency,
@@ -603,7 +622,7 @@ func cartSize(c []*pb.CartItem) int {
 	return cartSize
 }
 
-func renderMoney(money pb.Money) string {
+func renderMoney(money *pb.Money) string {
 	currencyLogo := renderCurrencyLogo(money.GetCurrencyCode())
 	return fmt.Sprintf("%s%d.%02d", currencyLogo, money.GetUnits(), money.GetNanos()/10000000)
 }

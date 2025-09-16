@@ -30,6 +30,8 @@ spec:
         sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
       serviceAccountName: frontend
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       securityContext:
         fsGroup: 1000
         runAsGroup: 1000
@@ -44,7 +46,7 @@ spec:
                 - ALL
             privileged: false
             readOnlyRootFilesystem: true
-          image: frontend
+          image: {{ .Values.images.frontend }}
           ports:
           - containerPort: 8080
           readinessProbe:
@@ -84,8 +86,8 @@ spec:
             value: "shoppingassistantservice:80"
           # # ENV_PLATFORM: One of: local, gcp, aws, azure, onprem, alibaba
           # # When not set, defaults to "local" unless running in GKE, otherwies auto-sets to gcp
-          # - name: ENV_PLATFORM
-          #   value: "aws"
+          - name: ENV_PLATFORM
+            value: "aws"
           - name: ENABLE_PROFILER
             value: "0"
           # - name: CYMBAL_BRANDING
@@ -133,6 +135,25 @@ spec:
   ports:
   - name: http
     port: 80
+    targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-metrics
+  labels:
+    app: frontend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+spec:
+  type: ClusterIP
+  selector:
+    app: frontend
+  ports:
+  - name: metrics
+    port: 8080
     targetPort: 8080
 ---
 apiVersion: v1

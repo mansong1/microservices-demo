@@ -28,6 +28,8 @@ spec:
         app: paymentservice
     spec:
       serviceAccountName: paymentservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +45,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: paymentservice
+        image: {{ .Values.images.paymentservice }}
         ports:
         - containerPort: 50051
         env:

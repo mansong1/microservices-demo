@@ -30,6 +30,8 @@ spec:
         sidecar.istio.io/rewriteAppHTTPProbers: "true"
     spec:
       serviceAccountName: loadgenerator
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       restartPolicy: Always
       securityContext:
@@ -77,7 +79,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: loadgenerator
+        image: {{ .Values.images.loadgenerator }}
         env:
         - name: FRONTEND_ADDR
           value: "frontend:80"

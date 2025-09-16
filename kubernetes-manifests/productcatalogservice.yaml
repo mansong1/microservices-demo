@@ -28,6 +28,8 @@ spec:
         app: productcatalogservice
     spec:
       serviceAccountName: productcatalogservice
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +45,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: productcatalogservice
+        image: {{ .Values.images.productcatalogservice }}
         ports:
         - containerPort: 3550
         env:

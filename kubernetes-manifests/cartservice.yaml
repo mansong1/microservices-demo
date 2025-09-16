@@ -28,6 +28,10 @@ spec:
         app: cartservice
     spec:
       serviceAccountName: cartservice
+      {{- if .Values.dockercfg}}
+      imagePullSecrets:
+      - name: {{ .Values.imagePullSecret }}
+      {{- end}}
       terminationGracePeriodSeconds: 5
       securityContext:
         fsGroup: 1000
@@ -43,7 +47,7 @@ spec:
               - ALL
           privileged: false
           readOnlyRootFilesystem: true
-        image: cartservice
+        image: {{ .Values.images.cartservice }}
         ports:
         - containerPort: 7070
         env:
