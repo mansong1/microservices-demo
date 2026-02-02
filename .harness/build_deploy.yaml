@@ -58,7 +58,7 @@ pipeline:
                       identifier: CSharp_Unit_Tests
                       spec:
                         connectorRef: account.Dockerhub
-                        image: mcr.microsoft.com/dotnet/sdk:9.0
+                        image: mcr.microsoft.com/dotnet/sdk:10.0
                         shell: Sh
                         command: |
                           dotnet test src/cartservice/ --logger:junit
