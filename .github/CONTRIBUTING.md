@@ -32,3 +32,13 @@ Here's the process for making a change to this repository:
     1. Wait for a maintainer of this repository to review your GitHub issue. For significantly complex proposals, you may be asked to start a Google Doc to discuss design decisions.
 
 If you have any questions, please [create a GitHub issue](https://github.com/GoogleCloudPlatform/microservices-demo/issues/new/choose).
+
+## Working with Forks
+
+If you've forked this repository and need guidance on:
+- Syncing your fork with the upstream repository
+- Creating pull requests from your fork
+- Handling merge conflicts
+- Best practices for fork-based contributions
+
+Please refer to our comprehensive [Fork Workflow Guide](/docs/fork-workflow.md).

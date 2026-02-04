@@ -137,6 +137,7 @@ Find **Protocol Buffers Descriptions** at the [`./protos` directory](/protos).
 ## Documentation
 
 - [Development](/docs/development-guide.md) to learn how to run and develop this app locally.
+- [Fork Workflow Guide](/docs/fork-workflow.md) to learn how to contribute from a forked repository.
 
 ## Demos featuring Online Boutique
 
