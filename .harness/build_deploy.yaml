@@ -39,7 +39,7 @@ pipeline:
                       identifier: Go_Unit_Tests
                       spec:
                         connectorRef: account.Dockerhub
-                        image: golang:1.24.3
+                        image: golang:1.25.6
                         shell: Sh
                         command: |-
                           go install github.com/jstemmer/go-junit-report@latest
@@ -58,7 +58,7 @@ pipeline:
                       identifier: CSharp_Unit_Tests
                       spec:
                         connectorRef: account.Dockerhub
-                        image: mcr.microsoft.com/dotnet/sdk:9.0
+                        image: mcr.microsoft.com/dotnet/sdk:10.0
                         shell: Sh
                         command: |
                           dotnet test src/cartservice/ --logger:junit
