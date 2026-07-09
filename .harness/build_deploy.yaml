@@ -238,6 +238,12 @@ pipeline:
                         applicationName: 3a0598c2-aaef-4525-ae7a-8532d0d1dd82
                         environmentName: e6396198-4445-4ca8-ba4d-25bacedb9b04
                         testSuiteName: d6c24c7a-3430-48ea-84e1-e63a64b161f4
+                      failureStrategies:
+                        - onFailure:
+                            errors:
+                              - AllErrors
+                            action:
+                              type: Ignore
                 rollbackSteps:
                   - step:
                       name: Canary Delete
