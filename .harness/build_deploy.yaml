@@ -112,6 +112,7 @@ pipeline:
               - serviceRef: shippingservice
               - serviceRef: currencyservice
               - serviceRef: productcatalogservice
+              - serviceRef: loadgenerator
             metadata:
               parallel: true
           execution:
