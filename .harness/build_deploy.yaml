@@ -230,6 +230,12 @@ pipeline:
                                         cpu: 250m
                                         memory: 256Mi
                                   timeout: 10m
+                                  failureStrategies:
+                                    - onFailure:
+                                        errors:
+                                          - AllErrors
+                                        action:
+                                          type: Ignore
                             stepGroupInfra:
                               type: KubernetesDirect
                               spec:
