@@ -254,7 +254,7 @@ websockets==15.0.1
     #   google-genai
     #   langgraph-sdk
     #   langsmith
-werkzeug==3.1.6
+werkzeug==3.1.9
     # via flask
 xxhash==3.6.0
     # via
