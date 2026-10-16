@@ -162,91 +162,99 @@ pipeline:
               - identifier: boutique
           execution:
             steps:
-              - stepGroup:
-                  name: Canary Deployment
-                  identifier: canaryDeployment
-                  steps:
-                    - step:
-                        name: Canary Deployment
-                        identifier: canaryDeployment
-                        type: K8sCanaryDeploy
-                        timeout: 10m
-                        spec:
-                          instanceSelection:
-                            type: Count
-                            spec:
-                              count: 1
-                          skipDryRun: false
-                    - parallel:
+              - parallel:
+                  - stepGroup:
+                      name: Canary Deployment
+                      identifier: canaryDeployment
+                      steps:
                         - step:
-                            type: Verify
-                            name: Verify
-                            identifier: Verify
-                            timeout: 2h
+                            name: Canary Deployment
+                            identifier: canaryDeployment
+                            type: K8sCanaryDeploy
+                            timeout: 10m
                             spec:
-                              isMultiServicesOrEnvs: false
-                              type: Canary
-                              monitoredService:
-                                type: Default
-                                spec: {}
-                              spec:
-                                sensitivity: HIGH
-                                duration: 15m
-                            failureStrategies:
-                              - onFailure:
-                                  errors:
-                                    - Verification
-                                  action:
-                                    type: ManualIntervention
-                                    spec:
-                                      timeout: 2h
-                                      onTimeout:
-                                        action:
-                                          type: StageRollback
-                              - onFailure:
-                                  errors:
-                                    - Unknown
-                                  action:
-                                    type: ManualIntervention
-                                    spec:
-                                      timeout: 2h
-                                      onTimeout:
-                                        action:
-                                          type: Ignore
-                        - stepGroup:
-                            name: AI Verify
-                            identifier: AI_Verify
-                            steps:
-                              - step:
-                                  type: AIVerifyNG
-                                  name: AI Verify
-                                  identifier: AI_Verify
+                              instanceSelection:
+                                type: Count
+                                spec:
+                                  count: 1
+                              skipDryRun: false
+                        - parallel:
+                            - step:
+                                type: Verify
+                                name: Verify
+                                identifier: Verify
+                                timeout: 2h
+                                spec:
+                                  isMultiServicesOrEnvs: false
+                                  type: Canary
+                                  monitoredService:
+                                    type: Default
+                                    spec: {}
                                   spec:
-                                    dataCollectionWindow: 5m
-                                    healthSources:
-                                      - healthSourceRef: Prometheus
-                                    resources:
-                                      limits:
-                                        cpu: 250m
-                                        memory: 256Mi
-                                  timeout: 10m
-                                  failureStrategies:
-                                    - onFailure:
-                                        errors:
-                                          - AllErrors
-                                        action:
-                                          type: Ignore
-                            stepGroupInfra:
-                              type: KubernetesDirect
-                              spec:
-                                connectorRef: account.eksCluster
-                                namespace: default
-                    - step:
-                        name: Canary Delete
-                        identifier: canaryDelete
-                        type: K8sCanaryDelete
-                        timeout: 10m
-                        spec: {}
+                                    sensitivity: HIGH
+                                    duration: 15m
+                                failureStrategies:
+                                  - onFailure:
+                                      errors:
+                                        - Verification
+                                      action:
+                                        type: ManualIntervention
+                                        spec:
+                                          timeout: 2h
+                                          onTimeout:
+                                            action:
+                                              type: StageRollback
+                                  - onFailure:
+                                      errors:
+                                        - Unknown
+                                      action:
+                                        type: ManualIntervention
+                                        spec:
+                                          timeout: 2h
+                                          onTimeout:
+                                            action:
+                                              type: Ignore
+                            - stepGroup:
+                                name: AI Verify
+                                identifier: AI_Verify
+                                steps:
+                                  - step:
+                                      type: AIVerifyNG
+                                      name: AI Verify
+                                      identifier: AI_Verify
+                                      spec:
+                                        dataCollectionWindow: 5m
+                                        healthSources:
+                                          - healthSourceRef: Prometheus
+                                        resources:
+                                          limits:
+                                            cpu: 250m
+                                            memory: 256Mi
+                                      timeout: 10m
+                                      failureStrategies:
+                                        - onFailure:
+                                            errors:
+                                              - AllErrors
+                                            action:
+                                              type: Ignore
+                                stepGroupInfra:
+                                  type: KubernetesDirect
+                                  spec:
+                                    connectorRef: account.eksCluster
+                                    namespace: default
+                        - step:
+                            name: Canary Delete
+                            identifier: canaryDelete
+                            type: K8sCanaryDelete
+                            timeout: 10m
+                            spec: {}
+                  - step:
+                      type: LoadTest
+                      name: Frontend Load Test
+                      identifier: Frontend_Load_Test
+                      timeout: 20m
+                      spec:
+                        loadTestRef: frontend
               - stepGroup:
                   name: Primary Deployment
                   identifier: primaryDeployment
